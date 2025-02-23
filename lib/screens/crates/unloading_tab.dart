@@ -22,42 +22,23 @@ class _UnloadingTabState extends State<UnloadingTab> {
   String? selectedLorry;
   String? selectedCustomer;
   String? selectedPoNumber;
-  List<String> lorryNumbers = [];
   List<String> customers = [];
   List<String> poNumbers = [];
   String serverResponse = "";
-  int totalScannedCrates = 0; // Add this variable
+  int totalScannedCrates = 0;
 
-  Future<List<String>> fetchVehicles(
-    String subLocationId,
-    String divisionId,
-  ) async {
-    try {
-      final response = await http.post(
-        Uri.parse(
-          'https://demo.secretary.lk/cargills_app/loading_person/backend/vehicle_details.php',
-        ),
-        body: {'sub_location_id': subLocationId, 'division_id': divisionId},
-      );
-
-      if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-        return List<String>.from(data);
-      } else {
-        throw Exception('Failed to load vehicles');
-      }
-    } on SocketException {
-      throw ('No internet connection');
-    } catch (e) {
-      throw Exception('An error occurred: $e');
-    }
+  @override
+  void initState() {
+    super.initState();
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    selectedLorry = userProvider.vehicleNumber;
   }
 
   Future<List<String>> fetchCustomers() async {
     try {
       final response = await http.post(
         Uri.parse(
-          'https://demo.secretary.lk/cargills_app/loading_person/backend/customers.php',
+          'https://demo.secretary.lk/cargills_app/driver/backend/customers.php',
         ),
       );
 
@@ -81,7 +62,7 @@ class _UnloadingTabState extends State<UnloadingTab> {
     try {
       final response = await http.post(
         Uri.parse(
-          'https://demo.secretary.lk/cargills_app/loading_person/backend/po_numbers.php',
+          'https://demo.secretary.lk/cargills_app/driver/backend/po_numbers.php',
         ),
       );
 
@@ -139,7 +120,7 @@ class _UnloadingTabState extends State<UnloadingTab> {
     try {
       final response = await http.post(
         Uri.parse(
-          'https://demo.secretary.lk/cargills_app/loading_person/backend/save_unload_total_crates.php',
+          'https://demo.secretary.lk/cargills_app/driver/backend/save_unload_total_crates.php',
         ),
         body: {
           'vehicle_no': selectedLorry!,
@@ -170,11 +151,10 @@ class _UnloadingTabState extends State<UnloadingTab> {
   void _doneScanning() {
     setState(() {
       isScanning = false;
-      totalScannedCrates = scannedCrates.length; // Store the count
-      scannedCrates.clear(); // Clear the list for the next scan
+      totalScannedCrates = scannedCrates.length;
+      scannedCrates.clear();
     });
 
-    // Send the total crate count to the backend
     _sendTotalCratesToDatabase();
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -184,17 +164,16 @@ class _UnloadingTabState extends State<UnloadingTab> {
 
   Future<void> _sendToDatabase(String serialNumber) async {
     try {
-      // Extract the BP code (e.g., "BP001") from the selectedCustomer string
       String bpCode = selectedCustomer!.split(' - ')[0];
 
       final response = await http.post(
         Uri.parse(
-          'https://demo.secretary.lk/cargills_app/loading_person/backend/unloading_crate_log.php',
+          'https://demo.secretary.lk/cargills_app/driver/backend/unloading_crate_log.php',
         ),
         body: {
           'serial': serialNumber,
           'vehicle_no': selectedLorry!,
-          'customer': bpCode, // Send only the BP code
+          'customer': bpCode,
           'po_number': selectedPoNumber!,
         },
       );
@@ -230,8 +209,8 @@ class _UnloadingTabState extends State<UnloadingTab> {
 
   Widget _buildTotalScannedCratesCard() {
     return Positioned(
-      left: 16, // Position the card on the right side of the screen
-      top: 150, // Adjust the top position as needed
+      left: 16,
+      top: 150,
       child: Card(
         elevation: 5,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
@@ -283,13 +262,9 @@ class _UnloadingTabState extends State<UnloadingTab> {
     return Scaffold(
       body: Stack(
         children: [
-          // Background Image with Fade Effect
           _buildBackgroundImage(),
-          // Location Details Card
           _buildLocationDetailsCard(userProvider),
-          // Total Scanned Crates Card (displayed after scanning)
           if (totalScannedCrates > 0) _buildTotalScannedCratesCard(),
-          // Selected Details Card (displayed when selections are made)
           if (selectedLorry != null ||
               selectedCustomer != null ||
               selectedPoNumber != null)
@@ -301,7 +276,6 @@ class _UnloadingTabState extends State<UnloadingTab> {
                     : Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        _buildLorrySelection(userProvider),
                         _buildCustomerSelection(userProvider),
                         _buildPoSelection(userProvider),
                         const SizedBox(height: 20),
@@ -316,8 +290,8 @@ class _UnloadingTabState extends State<UnloadingTab> {
 
   Widget _buildSelectedDetailsCard() {
     return Positioned(
-      right: 16, // Position the card on the right side of the screen
-      top: 16, // Adjust the top position as needed
+      right: 16,
+      top: 16,
       child: Card(
         elevation: 5,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
@@ -375,59 +349,6 @@ class _UnloadingTabState extends State<UnloadingTab> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildLorrySelection(UserProvider userProvider) {
-    return FutureBuilder<List<String>>(
-      future: fetchVehicles(
-        userProvider.subLocationId,
-        userProvider.divisionsId,
-      ),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return SpinKitThreeBounce(
-            color: Color.fromARGB(255, 249, 139, 71),
-            size: 30.0,
-          );
-        } else if (snapshot.hasError) {
-          return Text('Error: ${snapshot.error}');
-        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Text('No vehicles available');
-        } else {
-          lorryNumbers = snapshot.data!;
-          return Container(
-            width: 300,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: const Color.fromARGB(255, 249, 139, 71),
-                width: 2,
-              ),
-            ),
-            child: SearchableDropdown<String>(
-              items:
-                  lorryNumbers
-                      .map(
-                        (item) => DropdownMenuItem<String>(
-                          value: item,
-                          child: Text(item),
-                        ),
-                      )
-                      .toList(),
-              value: selectedLorry,
-              hint: const Text('Select Truck'),
-              searchHint: const Text('Search Truck'),
-              onChanged: (value) {
-                setState(() {
-                  selectedLorry = value;
-                });
-              },
-              isExpanded: true,
-            ),
-          );
-        }
-      },
     );
   }
 
@@ -533,14 +454,13 @@ class _UnloadingTabState extends State<UnloadingTab> {
 
   Widget _buildLocationDetailsCard(UserProvider userProvider) {
     return Positioned(
-      left: 16, // Position the card on the right side of the screen
-      top: 16, // Adjust the top position as needed
+      left: 16,
+      top: 16,
       child: Card(
         elevation: 5,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         child: Container(
           width: 300,
-
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -555,7 +475,6 @@ class _UnloadingTabState extends State<UnloadingTab> {
           ),
           child: Row(
             children: [
-              // Details (Sub Location and Division)
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -584,12 +503,11 @@ class _UnloadingTabState extends State<UnloadingTab> {
                   ],
                 ),
               ),
-              // Image on the right side
               const SizedBox(width: 10),
               ClipRRect(
                 borderRadius: BorderRadius.circular(10),
                 child: Image.asset(
-                  'assets/images/crate_image.png', // Add your image to assets
+                  'assets/images/crate_image.png',
                   width: 60,
                   height: 60,
                   fit: BoxFit.cover,
@@ -606,14 +524,12 @@ class _UnloadingTabState extends State<UnloadingTab> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        // Camera Logo with Orange Color
         Icon(
           Icons.camera_alt,
           size: 100,
-          color: const Color.fromARGB(255, 249, 139, 71), // Orange color
+          color: const Color.fromARGB(255, 249, 139, 71),
         ),
         const SizedBox(height: 20),
-        // Title
         const Text(
           "Scan the QR Code",
           style: TextStyle(
@@ -623,21 +539,19 @@ class _UnloadingTabState extends State<UnloadingTab> {
           ),
         ),
         const SizedBox(height: 10),
-        // Subtitle
         const Text(
           "Please scan the crate details",
           style: TextStyle(fontSize: 16, color: Colors.grey),
         ),
         const SizedBox(height: 30),
-        // Start Scan Button
         ElevatedButton(
           onPressed: selectedLorry != null ? _startScan : null,
           style: ElevatedButton.styleFrom(
             backgroundColor:
                 selectedLorry != null
-                    ? const Color.fromARGB(255, 249, 139, 71) // Orange color
+                    ? const Color.fromARGB(255, 249, 139, 71)
                     : Colors.grey,
-            foregroundColor: Colors.white, // Ensures text color is white
+            foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
             textStyle: const TextStyle(fontSize: 18),
           ),
@@ -651,12 +565,10 @@ class _UnloadingTabState extends State<UnloadingTab> {
     return Container(
       decoration: BoxDecoration(
         image: DecorationImage(
-          image: const AssetImage(
-            'assets/images/background_pattern.jpg',
-          ), // Add your image to assets
+          image: const AssetImage('assets/images/background_pattern.jpg'),
           fit: BoxFit.cover,
           colorFilter: ColorFilter.mode(
-            Colors.white.withOpacity(0.9), // Fade effect
+            Colors.white.withOpacity(0.9),
             BlendMode.lighten,
           ),
         ),
@@ -728,13 +640,8 @@ class _UnloadingTabState extends State<UnloadingTab> {
                     ElevatedButton(
                       onPressed: _doneScanning,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color.fromARGB(
-                          255,
-                          5,
-                          168,
-                          29,
-                        ), // Orange color
-                        foregroundColor: Colors.white, // White text
+                        backgroundColor: const Color.fromARGB(255, 5, 168, 29),
+                        foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 30,
                           vertical: 15,
@@ -742,12 +649,12 @@ class _UnloadingTabState extends State<UnloadingTab> {
                       ),
                       child: const Text("Done Scanning"),
                     ),
-                    const SizedBox(width: 20), // Space between buttons
+                    const SizedBox(width: 20),
                     ElevatedButton(
                       onPressed: _resetPage,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red, // Red color for exit
-                        foregroundColor: Colors.white, // White text
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 30,
                           vertical: 15,

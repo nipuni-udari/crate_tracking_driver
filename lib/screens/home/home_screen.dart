@@ -70,6 +70,11 @@ class _HomeScreenState extends State<HomeScreen> {
     fetchUserDetails();
   }
 
+  void _logout() {
+    Provider.of<UserProvider>(context, listen: false);
+    Navigator.pushReplacementNamed(context, '/vehicle');
+  }
+
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
@@ -84,7 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               Text(
-                'Vehicle No: ${userProvider.vehicleNumber.isNotEmpty ? userProvider.vehicleNumber : userProvider.vehicleNumber}',
+                'Vehicle No: ${userProvider.vehicleNumber}',
                 style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -92,12 +97,34 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const SizedBox(width: 10),
-              const CircleAvatar(
-                backgroundColor: Colors.white,
-                child: Icon(
-                  Icons.person,
-                  color: Color.fromARGB(255, 252, 132, 58),
-                  size: 28,
+
+              // Profile Icon with Logout Button
+              PopupMenuButton<String>(
+                onSelected: (value) {
+                  if (value == 'logout') {
+                    _logout();
+                  }
+                },
+                itemBuilder:
+                    (context) => [
+                      const PopupMenuItem(
+                        value: 'logout',
+                        child: Row(
+                          children: [
+                            Icon(Icons.logout, color: Colors.red),
+                            SizedBox(width: 10),
+                            Text('Logout', style: TextStyle(color: Colors.red)),
+                          ],
+                        ),
+                      ),
+                    ],
+                child: const CircleAvatar(
+                  backgroundColor: Colors.white,
+                  child: Icon(
+                    Icons.person,
+                    color: Color.fromARGB(255, 252, 132, 58),
+                    size: 28,
+                  ),
                 ),
               ),
             ],
@@ -105,6 +132,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         automaticallyImplyLeading: false,
       ),
+
       body: Stack(
         children: [
           // Background Image with Repeat Pattern

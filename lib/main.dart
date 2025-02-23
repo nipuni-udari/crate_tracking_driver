@@ -25,7 +25,7 @@ class MyApp extends StatelessWidget {
       initialRoute: '/', // Set the initial route
       routes: {
         '/': (context) => SplashScreen(),
-        '/mobile': (context) => VehicleScreen(),
+        '/vehicle': (context) => VehicleScreen(),
         '/home': (context) => HomeScreen(vehicleNumber: ''),
       },
     );

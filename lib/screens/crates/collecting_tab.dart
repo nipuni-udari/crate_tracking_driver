@@ -23,29 +23,11 @@ class _CollectingTabState extends State<CollectingTab> {
   String serverResponse = "";
   int totalScannedCrates = 0; // Add this variable
 
-  Future<List<String>> fetchVehicles(
-    String subLocationId,
-    String divisionId,
-  ) async {
-    try {
-      final response = await http.post(
-        Uri.parse(
-          'https://demo.secretary.lk/cargills_app/loading_person/backend/vehicle_details.php',
-        ),
-        body: {'sub_location_id': subLocationId, 'division_id': divisionId},
-      );
-
-      if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-        return List<String>.from(data);
-      } else {
-        throw Exception('Failed to load vehicles');
-      }
-    } on SocketException {
-      throw ('No internet connection');
-    } catch (e) {
-      throw Exception('An error occurred: $e');
-    }
+  @override
+  void initState() {
+    super.initState();
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    selectedLorry = userProvider.vehicleNumber;
   }
 
   Future<void> _startScan() async {
@@ -242,7 +224,6 @@ class _CollectingTabState extends State<CollectingTab> {
                     : Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        _buildLorrySelection(userProvider),
                         if (selectedLorry != null)
                           Padding(
                             padding: const EdgeInsets.all(8.0),
@@ -265,68 +246,6 @@ class _CollectingTabState extends State<CollectingTab> {
     );
   }
 
-  Widget _buildLorrySelection(UserProvider userProvider) {
-    return FutureBuilder<List<String>>(
-      future: fetchVehicles(
-        userProvider.subLocationId,
-        userProvider.divisionsId,
-      ),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return SpinKitThreeBounce(
-            color: Color.fromARGB(255, 249, 139, 71),
-            size: 30.0,
-          );
-        } else if (snapshot.hasError) {
-          return Text('Error: ${snapshot.error}');
-        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Text('No vehicles available');
-        } else {
-          lorryNumbers = snapshot.data!;
-          return Container(
-            width: 300,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: const Color.fromARGB(255, 249, 139, 71),
-                width: 2,
-              ),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color.fromARGB(255, 241, 240, 240),
-                  blurRadius: 4,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            child: DropdownButton<String>(
-              value: selectedLorry,
-              hint: const Text('Select Lorry'),
-              icon: const Icon(
-                Icons.arrow_drop_down,
-                color: Color.fromARGB(255, 249, 139, 71),
-              ),
-              style: const TextStyle(color: Colors.black, fontSize: 18),
-              underline: const SizedBox(),
-              items:
-                  lorryNumbers.map((lorry) {
-                    return DropdownMenuItem<String>(
-                      value: lorry,
-                      child: Text(lorry, style: const TextStyle(fontSize: 18)),
-                    );
-                  }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  selectedLorry = value;
-                });
-              },
-            ),
-          );
-        }
-      },
-    );
-  }
-
   Widget _buildLocationDetailsCard(UserProvider userProvider) {
     return Positioned(
       left: 16, // Position the card on the right side of the screen
@@ -336,7 +255,6 @@ class _CollectingTabState extends State<CollectingTab> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         child: Container(
           width: 300,
-
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -370,6 +288,18 @@ class _CollectingTabState extends State<CollectingTab> {
                         padding: const EdgeInsets.only(top: 8.0),
                         child: Text(
                           'Division: ${userProvider.divisionsName}',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    if (selectedLorry != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Text(
+                          'Selected Truck: $selectedLorry',
                           style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,

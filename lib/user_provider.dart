@@ -6,6 +6,7 @@ class UserProvider extends ChangeNotifier {
   String divisionsId = "";
   String divisionsName = "";
   String subLocationName = "";
+  //String vehicleId = "";
 
   void setUser({
     required String vehicleNumber,
@@ -13,12 +14,14 @@ class UserProvider extends ChangeNotifier {
     required String divisionsId,
     required String divisionsName,
     required String subLocationName,
+    // required String vehicleId,
   }) {
     this.vehicleNumber = vehicleNumber;
     this.subLocationId = subLocationId;
     this.divisionsId = divisionsId;
     this.divisionsName = divisionsName;
     this.subLocationName = subLocationName;
+    // this.vehicleId = vehicleId;
     notifyListeners(); // Notify UI of changes
   }
 }
