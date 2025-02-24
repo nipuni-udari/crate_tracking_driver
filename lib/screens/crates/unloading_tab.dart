@@ -85,7 +85,7 @@ class _UnloadingTabState extends State<UnloadingTab> {
         selectedPoNumber == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("Please select lorry, customer and PO number first"),
+          content: Text("Please select lorry, customer, and PO number first"),
         ),
       );
       return;
@@ -521,6 +521,8 @@ class _UnloadingTabState extends State<UnloadingTab> {
   }
 
   Widget _buildStartScanButton() {
+    bool isButtonEnabled = selectedCustomer != null && selectedPoNumber != null;
+
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -545,10 +547,10 @@ class _UnloadingTabState extends State<UnloadingTab> {
         ),
         const SizedBox(height: 30),
         ElevatedButton(
-          onPressed: selectedLorry != null ? _startScan : null,
+          onPressed: isButtonEnabled ? _startScan : null,
           style: ElevatedButton.styleFrom(
             backgroundColor:
-                selectedLorry != null
+                isButtonEnabled
                     ? const Color.fromARGB(255, 249, 139, 71)
                     : Colors.grey,
             foregroundColor: Colors.white,

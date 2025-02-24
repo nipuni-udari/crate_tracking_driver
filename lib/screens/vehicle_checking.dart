@@ -144,7 +144,7 @@ class _VehicleScreenState extends State<VehicleScreen>
                     const SizedBox(height: 28),
                     TextFormField(
                       controller: _vehicleController,
-                      keyboardType: TextInputType.text,
+                      keyboardType: TextInputType.number, // Number pad
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -172,23 +172,28 @@ class _VehicleScreenState extends State<VehicleScreen>
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: () {
-                          final vehicleNumber = _vehicleController.text.trim();
-                          if (vehicleNumber.isEmpty) {
-                            _showAlert('Please enter a vehicle number.', null);
-                          } else {
-                            vehicleVerify(vehicleNumber);
-                          }
-                        },
+                        onPressed:
+                            _isLoading
+                                ? null
+                                : () {
+                                  final vehicleNumber =
+                                      _vehicleController.text.trim();
+                                  if (vehicleNumber.isEmpty) {
+                                    _showAlert(
+                                      'Please enter a vehicle number.',
+                                      null,
+                                    );
+                                  } else {
+                                    vehicleVerify(vehicleNumber);
+                                  }
+                                },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: buttonColor,
                         ),
-                        child:
-                            _isLoading
-                                ? const CircularProgressIndicator(
-                                  color: Colors.white,
-                                )
-                                : const Text('Verify'),
+                        child: Text(
+                          _isLoading ? 'Verifying...' : 'Verify',
+                          style: const TextStyle(color: Colors.white),
+                        ),
                       ),
                     ),
                   ],
