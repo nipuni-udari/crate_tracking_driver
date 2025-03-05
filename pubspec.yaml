@@ -91,7 +91,7 @@ flutter:
     - assets/images/collect.webp
     - assets/images/receive.avif
     - assets/images/truck.png
-    - assets/images/driver logo.png
+    - assets/images/driver_logo.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

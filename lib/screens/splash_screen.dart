@@ -71,7 +71,7 @@ class _SplashScreenState extends State<SplashScreen>
                 FadeTransition(
                   opacity: _fadeAnimation,
                   child: Image.asset(
-                    'assets/images/logo.png', // Use your crate image
+                    'assets/images/driver_logo.png', // Use your crate image
                     width: 350,
                     height: 350,
                   ),
