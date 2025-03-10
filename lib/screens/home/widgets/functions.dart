@@ -119,7 +119,7 @@ class _FunctionsWidgetState extends State<FunctionsWidget> {
                   readOnly: true, // Make the text field read-only
                   controller: TextEditingController(text: vehicleNumber),
                   style: const TextStyle(color: Colors.orange),
-                  keyboardType: TextInputType.number,
+                  // keyboardType: TextInputType.number,
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: Colors.white,

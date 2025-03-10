@@ -144,7 +144,7 @@ class _VehicleScreenState extends State<VehicleScreen>
                     const SizedBox(height: 28),
                     TextFormField(
                       controller: _vehicleController,
-                      keyboardType: TextInputType.number, // Number pad
+                      // keyboardType: TextInputType.number, // Number pad
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
